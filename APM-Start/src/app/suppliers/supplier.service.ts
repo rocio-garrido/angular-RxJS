@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable, of, throwError } from 'rxjs';
+import { concatMap, map, Observable, of, tap, throwError } from 'rxjs';
 import { Supplier } from './supplier';
 
 
@@ -13,12 +13,22 @@ export class SupplierService {
   suppliersWithMap$ = of(1, 5, 8)
     .pipe(
       map(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
-    )
+    );
+
+  suppliersWithConcatMap$ = of(1, 5, 8)
+    .pipe(
+      tap(id => console.log('concatMap source Observable', id)),
+      concatMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
+    );
 
   constructor(private http: HttpClient) {
-    this.suppliersWithMap$.subscribe(o => o.subscribe(
-      item => console.log('map result', item)
-    ));
+    this.suppliersWithConcatMap$.subscribe(
+      item => console.log('concatMap result', item)
+    );
+
+    // this.suppliersWithMap$.subscribe(o => o.subscribe(
+    //   item => console.log('map result', item)
+    // ));
   }
 
   private handleError(err: HttpErrorResponse): Observable<never> {
