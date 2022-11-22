@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { concatMap, map, mergeMap, Observable, of, switchMap, tap, throwError } from 'rxjs';
+import { catchError, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { Supplier } from './supplier';
 
 
@@ -10,38 +10,14 @@ import { Supplier } from './supplier';
 export class SupplierService {
   suppliersUrl = 'api/suppliers';
 
-  suppliersWithMap$ = of(1, 5, 8)
+  suppliers$ = this.http.get<Supplier[]>(this.suppliersUrl)
     .pipe(
-      map(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
+      tap(data => console.log('suppliers', JSON.stringify(data))),
+      shareReplay(1),
+      catchError(this.handleError)
     );
 
-  suppliersWithConcatMap$ = of(1, 5, 8)
-    .pipe(
-      tap(id => console.log('concatMap source Observable', id)),
-      concatMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
-    );
-
-  suppliersWithMergeMap$ = of(1, 5, 8)
-    .pipe(
-      tap(id => console.log('mergeMap source Observable', id)),
-      mergeMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
-    );
-
-  supplierWithSwitchMap$ = of(1, 5, 8)
-    .pipe(
-      tap(id => console.log('switchMap source Observable', id)),
-      switchMap(id => this.http.get<Supplier>(`${this.suppliersUrl}/${id}`))
-    )
-
-  constructor(private http: HttpClient) {
-    // this.suppliersWithConcatMap$.subscribe(item => console.log('concatMap result', item));
-    // this.suppliersWithMergeMap$.subscribe(item => console.log('mergeMap result', item));
-    // this.supplierWithSwitchMap$.subscribe(item => console.log('switchMap result', item));
-
-    // this.suppliersWithMap$.subscribe(o => o.subscribe(
-    //   item => console.log('map result', item)
-    // ));
-  }
+  constructor(private http: HttpClient) { }
 
   private handleError(err: HttpErrorResponse): Observable<never> {
     // in a real world app, we may send the server to some remote logging infrastructure
